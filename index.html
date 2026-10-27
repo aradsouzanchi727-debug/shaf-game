@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#c0c0c0">
+  <title>شاف گیم | مین‌یاب</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --face: #c0c0c0;
+      --light: #fff;
+      --mid: #808080;
+      --dark: #404040;
+      --blue: #000080;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 14px;
+      background: #168b8b;
+      color: #111;
+      font-family: Tahoma, Arial, sans-serif;
+    }
+
+    .window {
+      width: min(100%, 620px);
+      padding: 7px;
+      background: var(--face);
+      border-top: 3px solid var(--light);
+      border-left: 3px solid var(--light);
+      border-right: 3px solid var(--dark);
+      border-bottom: 3px solid var(--dark);
+      box-shadow: 10px 12px 0 rgb(0 0 0 / 17%);
+    }
+
+    .titlebar {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 34px;
+      padding: 4px 8px;
+      margin-bottom: 9px;
+      color: white;
+      background: var(--blue);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .title-icon { font-size: 18px; }
+
+    .intro {
+      margin: 0 2px 12px;
+      color: #333;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 2px 10px;
+    }
+
+    select, button { font: inherit; }
+
+    select, .small-button {
+      min-height: 34px;
+      padding: 4px 9px;
+      border: 2px solid;
+      border-color: var(--light) var(--dark) var(--dark) var(--light);
+      border-radius: 0;
+      background: var(--face);
+      color: #111;
+    }
+
+    select { cursor: pointer; }
+    button { cursor: pointer; }
+    button:active, .pressed {
+      border-color: var(--dark) var(--light) var(--light) var(--dark) !important;
+      padding-top: 6px;
+      padding-bottom: 2px;
+    }
+
+    .flag-mode[aria-pressed="true"] {
+      background: #ffe59a;
+      border-color: var(--dark) var(--light) var(--light) var(--dark);
+    }
+
+    .status-bar {
+      direction: ltr;
+      display: grid;
+      grid-template-columns: minmax(72px, 1fr) 48px minmax(72px, 1fr);
+      align-items: center;
+      gap: 8px;
+      min-height: 57px;
+      padding: 7px;
+      border: 2px solid;
+      border-color: var(--mid) var(--light) var(--light) var(--mid);
+      background: #bdbdbd;
+    }
+
+    .counter {
+      min-width: 70px;
+      padding: 3px 5px;
+      background: #171717;
+      color: #ff3030;
+      font: 700 27px/1 "Courier New", monospace;
+      letter-spacing: 1px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .face-button {
+      width: 44px;
+      height: 42px;
+      justify-self: center;
+      padding: 0;
+      border: 2px solid;
+      border-color: var(--light) var(--dark) var(--dark) var(--light);
+      background: var(--face);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .message {
+      min-height: 24px;
+      margin: 8px 2px;
+      color: #333;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .board-frame {
+      max-width: 100%;
+      overflow: auto;
+      padding: 5px;
+      border: 3px solid;
+      border-color: var(--mid) var(--light) var(--light) var(--mid);
+      background: #bdbdbd;
+      overscroll-behavior: contain;
+    }
+
+    .board {
+      direction: ltr;
+      display: grid;
+      width: max-content;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 0;
+      border: 3px solid;
+      border-color: var(--light) var(--mid) var(--mid) var(--light);
+      background: var(--face);
+      color: #111;
+      font: 700 18px/1 Arial, sans-serif;
+      touch-action: manipulation;
+    }
+
+    .cell.revealed {
+      border: 1px solid #999;
+      background: #c9c9c9;
+    }
+
+    .cell.mine { padding: 1px; }
+    .mine-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 42%;
+    }
+    .cell.exploded { background: #ff4646; }
+    .cell.wrong { color: #bd1515; }
+    .n1 { color: #0000ff; }
+    .n2 { color: #168319; }
+    .n3 { color: #e12727; }
+    .n4 { color: #111276; }
+    .n5 { color: #811515; }
+    .n6 { color: #158989; }
+    .n7 { color: #222; }
+    .n8 { color: #777; }
+
+    .help {
+      margin: 11px 3px 2px;
+      color: #333;
+      font-size: 12px;
+      line-height: 1.9;
+    }
+
+    kbd {
+      padding: 1px 5px;
+      border: 1px solid #888;
+      background: #eee;
+      font: inherit;
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 12px 7px; }
+      .window { padding: 5px; }
+      .toolbar { flex-wrap: wrap; }
+      .intro { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="window" aria-label="بازی مین‌یاب">
+    <header class="titlebar"><span class="title-icon" aria-hidden="true">💣</span><span>شاف گیم</span></header>
+    <p class="intro">خانه‌های خالی را باز کنید و جای مین‌ها را با پرچم مشخص کنید. مراقب باشید روی مین کلیک نکنید!</p>
+
+    <section class="toolbar" aria-label="تنظیمات بازی">
+      <label for="difficulty">درجهٔ سختی:</label>
+      <select id="difficulty">
+        <option value="easy">آسان · ۹×۹</option>
+        <option value="medium">متوسط · ۱۶×۱۶</option>
+        <option value="hard">سخت · ۱۶×۳۰</option>
+      </select>
+      <button class="small-button flag-mode" id="flagMode" type="button" aria-pressed="false">🚩 حالت پرچم</button>
+    </section>
+
+    <section class="status-bar" aria-label="وضعیت بازی">
+      <output class="counter" id="mineCount" aria-label="تعداد مین باقی‌مانده">010</output>
+      <button class="face-button" id="reset" type="button" aria-label="شروع دوباره">🙂</button>
+      <output class="counter" id="timer" aria-label="زمان سپری‌شده">000</output>
+    </section>
+    <p class="message" id="message" aria-live="polite">برای شروع، یکی از خانه‌ها را باز کنید.</p>
+
+    <div class="board-frame" id="boardFrame">
+      <div class="board" id="board" role="grid" aria-label="صفحهٔ بازی مین‌یاب"></div>
+    </div>
+
+    <p class="help">برای پرچم‌گذاری: کلیک راست کنید یا «حالت پرچم» را روشن کنید. با باز کردن همهٔ خانه‌های امن برنده می‌شوید.</p>
+  </main>
+  <audio id="explosionSound" preload="auto"><source src="mine-explosion.ogg" type="audio/ogg"></audio>
+
+  <script>
+    (() => {
+      const levels = {
+        easy: { rows: 9, cols: 9, mines: 10 },
+        medium: { rows: 16, cols: 16, mines: 40 },
+        hard: { rows: 16, cols: 30, mines: 99 },
+      };
+      const boardEl = document.querySelector('#board');
+      const difficultyEl = document.querySelector('#difficulty');
+      const mineCountEl = document.querySelector('#mineCount');
+      const timerEl = document.querySelector('#timer');
+      const messageEl = document.querySelector('#message');
+      const resetEl = document.querySelector('#reset');
+      const flagModeEl = document.querySelector('#flagMode');
+      const explosionSound = document.querySelector('#explosionSound');
+
+      let settings;
+      let cells;
+      let status;
+      let flags = 0;
+      let revealed = 0;
+      let elapsed = 0;
+      let timerId = null;
+      let flagMode = false;
+      let firstCell = null;
+
+      function formatCounter(value) {
+        const sign = value < 0 ? '-' : '';
+        return sign + String(Math.min(Math.abs(value), 999)).padStart(3, '0');
+      }
+
+      function updateCounters() {
+        mineCountEl.textContent = formatCounter(settings.mines - flags);
+        timerEl.textContent = formatCounter(elapsed);
+      }
+
+      function neighbors(index) {
+        const row = Math.floor(index / settings.cols);
+        const col = index % settings.cols;
+        const result = [];
+        for (let dr = -1; dr <= 1; dr += 1) {
+          for (let dc = -1; dc <= 1; dc += 1) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = row + dr;
+            const nc = col + dc;
+            if (nr >= 0 && nr < settings.rows && nc >= 0 && nc < settings.cols) {
+              result.push(nr * settings.cols + nc);
+            }
+          }
+        }
+        return result;
+      }
+
+      function makeBoard() {
+        clearInterval(timerId);
+        settings = levels[difficultyEl.value];
+        cells = Array.from({ length: settings.rows * settings.cols }, () => ({ mine: false, count: 0, revealed: false, flagged: false }));
+        status = 'ready';
+        flags = 0;
+        revealed = 0;
+        elapsed = 0;
+        firstCell = null;
+        flagMode = false;
+        flagModeEl.setAttribute('aria-pressed', 'false');
+        boardEl.style.gridTemplateColumns = `repeat(${settings.cols}, 30px)`;
+        boardEl.setAttribute('aria-rowcount', settings.rows);
+        boardEl.setAttribute('aria-colcount', settings.cols);
+        boardEl.replaceChildren();
+        cells.forEach((_, index) => {
+          const button = document.createElement('button');
+          button.className = 'cell';
+          button.type = 'button';
+          button.setAttribute('role', 'gridcell');
+          button.setAttribute('aria-label', `ردیف ${Math.floor(index / settings.cols) + 1}، ستون ${index % settings.cols + 1}، بسته`);
+          button.dataset.index = index;
+          button.addEventListener('click', () => handleCell(index));
+          button.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            toggleFlag(index);
+          });
+          boardEl.append(button);
+        });
+        resetEl.textContent = '🙂';
+        messageEl.textContent = 'برای شروع، یکی از خانه‌ها را باز کنید.';
+        updateCounters();
+      }
+
+      function placeMines(safeIndex) {
+        const safe = new Set([safeIndex, ...neighbors(safeIndex)]);
+        const candidates = cells.map((_, i) => i).filter((i) => !safe.has(i));
+        for (let i = candidates.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        candidates.slice(0, settings.mines).forEach((index) => { cells[index].mine = true; });
+        cells.forEach((cell, index) => {
+          if (!cell.mine) cell.count = neighbors(index).filter((near) => cells[near].mine).length;
+        });
+        firstCell = safeIndex;
+      }
+
+      function startTimer() {
+        if (timerId !== null) return;
+        timerId = setInterval(() => {
+          if (elapsed < 999) elapsed += 1;
+          updateCounters();
+        }, 1000);
+      }
+
+      function playExplosionSound() {
+        explosionSound.pause();
+        explosionSound.currentTime = 0;
+        const playback = explosionSound.play();
+        if (playback && typeof playback.catch === 'function') playback.catch(() => {});
+      }
+
+      function handleCell(index) {
+        if (status === 'won' || status === 'lost') return;
+        if (flagMode) {
+          toggleFlag(index);
+          return;
+        }
+        const cell = cells[index];
+        if (cell.revealed || cell.flagged) return;
+        if (status === 'ready') {
+          placeMines(index);
+          status = 'playing';
+          startTimer();
+        }
+        if (cell.mine) {
+          playExplosionSound();
+          cell.revealed = true;
+          renderCell(index, true);
+          finish(false);
+          return;
+        }
+        revealFrom(index);
+        checkWin();
+      }
+
+      function revealFrom(start) {
+        const queue = [start];
+        const visited = new Set();
+        while (queue.length) {
+          const index = queue.pop();
+          if (visited.has(index)) continue;
+          visited.add(index);
+          const cell = cells[index];
+          if (cell.revealed || cell.flagged || cell.mine) continue;
+          cell.revealed = true;
+          revealed += 1;
+          renderCell(index);
+          if (cell.count === 0) neighbors(index).forEach((near) => queue.push(near));
+        }
+      }
+
+      function toggleFlag(index) {
+        if (status === 'won' || status === 'lost' || cells[index].revealed) return;
+        if (!cells[index].flagged && flags >= settings.mines) {
+          messageEl.textContent = 'تعداد پرچم‌ها به سقف رسیده است.';
+          return;
+        }
+        cells[index].flagged = !cells[index].flagged;
+        flags += cells[index].flagged ? 1 : -1;
+        renderCell(index);
+        updateCounters();
+        if (status === 'ready') messageEl.textContent = 'خوب است! حالا خانه‌های امن را باز کنید.';
+      }
+
+      function renderCell(index, exploded = false) {
+        const cell = cells[index];
+        const button = boardEl.children[index];
+        button.className = 'cell';
+        button.textContent = '';
+        if (cell.revealed) {
+          button.classList.add('revealed');
+          if (cell.mine) {
+            button.classList.add('mine');
+            if (exploded) button.classList.add('exploded');
+            const image = document.createElement('img');
+            image.className = 'mine-image';
+            image.src = 'mine.jpg';
+            image.alt = '';
+            image.draggable = false;
+            button.append(image);
+            button.setAttribute('aria-label', 'مین');
+          } else if (cell.count > 0) {
+            button.classList.add(`n${cell.count}`);
+            button.textContent = cell.count;
+            button.setAttribute('aria-label', `${cell.count} مین در اطراف`);
+          } else {
+            button.setAttribute('aria-label', 'خالی');
+          }
+        } else if (cell.flagged) {
+          button.textContent = '🚩';
+          button.setAttribute('aria-label', 'پرچم');
+        } else {
+          button.setAttribute('aria-label', `ردیف ${Math.floor(index / settings.cols) + 1}، ستون ${index % settings.cols + 1}، بسته`);
+        }
+      }
+
+      function finish(won) {
+        status = won ? 'won' : 'lost';
+        clearInterval(timerId);
+        timerId = null;
+        resetEl.textContent = won ? '😎' : '😵';
+      if (won) {
+        cells.forEach((cell) => {
+          if (cell.mine && !cell.flagged) {
+            cell.flagged = true;
+            flags += 1;
+          }
+        });
+        updateCounters();
+      }
+        cells.forEach((cell, index) => {
+          const button = boardEl.children[index];
+          if (cell.mine && !cell.flagged) {
+            cell.revealed = true;
+            renderCell(index);
+          } else if (!cell.mine && cell.flagged) {
+            button.classList.add('wrong');
+            button.textContent = '✖';
+            button.setAttribute('aria-label', 'پرچم اشتباه');
+          }
+        });
+        messageEl.textContent = won ? 'آفرین! همهٔ مین‌ها را خنثی کردید. 🎉' : 'اوه! روی مین رفتید. دوباره تلاش کنید.';
+      }
+
+      function checkWin() {
+        if (revealed === cells.length - settings.mines) finish(true);
+      }
+
+      resetEl.addEventListener('click', makeBoard);
+      difficultyEl.addEventListener('change', makeBoard);
+      flagModeEl.addEventListener('click', () => {
+        flagMode = !flagMode;
+        flagModeEl.setAttribute('aria-pressed', String(flagMode));
+        messageEl.textContent = flagMode ? 'حالت پرچم روشن است؛ خانه‌ها را لمس کنید تا پرچم بخورند.' : 'حالت پرچم خاموش است؛ خانه‌ها را برای باز کردن لمس کنید.';
+      });
+
+      makeBoard();
+    })();
+  </script>
+</body>
+</html>
